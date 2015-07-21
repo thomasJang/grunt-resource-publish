@@ -12,16 +12,18 @@ module.exports = function (grunt) {
 
 	// Project configuration.
 	grunt.initConfig({
-		jshint: {
-			all: ['Gruntfile.js', 'tasks/*.js', '<%= nodeunit.tests %>'], options: {
-				jshintrc: '.jshintrc'
+		clean: {
+			tests: ['test/target']
+		},
+		copy: {
+			main: {
+				files: [
+					// includes files within path
+					{expand: true, cwd: 'test/original/', src: ['**'], dest: 'test/target/'},
+				]
 			}
 		},
 
-		// Before generating any new files, remove any previously-created files.
-		clean: {
-			tests: ['tmp']
-		},
 
 		// Configuration to be run (and then tested).
 		resource_publish: {
@@ -29,20 +31,17 @@ module.exports = function (grunt) {
 				options: {
 					detect: {
 						js: true,
-						css: true
+						css: false
 					}
 				},
-				files: {
-					src: 'test/target/**/*.html'
-				}
+				files: [
+					{
+						src: 'test/target/**/*.html',
+						resource_dest: "test/target/__"
+					}
+				]
 			}
-		},
-
-		// Unit tests.
-		nodeunit: {
-			tests: ['test/*_test.js']
 		}
-
 	});
 
 	// Actually load this plugin's task(s).
@@ -51,13 +50,11 @@ module.exports = function (grunt) {
 	// These plugins provide necessary tasks.
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-clean');
+	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-nodeunit');
 
 	// Whenever the "test" task is run, first clean the "tmp" dir, then run this
 	// plugin's task(s), then test the result.
-	grunt.registerTask('test', ['clean', 'resource_publish', 'nodeunit']);
-
-	// By default, lint and run all tests.
-	grunt.registerTask('default', ['jshint', 'test']);
-
+	grunt.registerTask('test', ['resource_publish']);
+	grunt.registerTask('reset_test', ['clean','copy']);
 };

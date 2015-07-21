@@ -24,63 +24,63 @@ In your project's Gruntfile, add a section named `resource_publish` to the data 
 
 ```js
 grunt.initConfig({
-  resource_publish: {
-    options: {
-      // Task-specific options go here.
-    },
-    your_target: {
-      // Target-specific file lists and/or options go here.
-    },
-  },
+	resource_publish: {
+		run: {
+			options: {
+				detect: {
+					js: true,
+					css: false
+				}
+			},
+			files: [
+				{
+					src: 'test/target/**/*.html',
+					resource_dest: "test/target/__"
+				}
+			]
+		}
+	}
 });
 ```
 
-### Options
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
 
-#### options.separator
-Type: `String`
-Default value: `',  '`
+	<link rel="stylesheet" type="text/css" href="css/app.css" />
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="js/app12.js"></script>
 
-A string value that is used to do something with whatever.
+	<title></title>
+</head>
+<body>
 
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
-
-A string value that is used to do something else with whatever else.
-
-### Usage Examples
-
-#### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
-
-```js
-grunt.initConfig({
-  resource_publish: {
-    options: {},
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
-});
+</body>
+</html>
 ```
 
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
+#### run resource_publish
 
-```js
-grunt.initConfig({
-  resource_publish: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
-});
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+
+	<link rel="stylesheet" type="text/css" href="css/app.css" />
+	<script type="text/javascript" src="test/target/__/res_000.20150621191250.js" data-min="true"></script>
+	
+
+	<title></title>
+</head>
+<body>
+
+</body>
+</html>
 ```
+
 
 ## Contributing
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).

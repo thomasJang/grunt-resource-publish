@@ -1,9 +1,10 @@
 /**
  * Created by tom on 15. 7. 20..
  */
-// app.js
 
-var app = {
+// app12.js
+
+var app12 = {
 	fn: function(){
 		return "some contents";
 	},
