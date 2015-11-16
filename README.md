@@ -30,12 +30,14 @@ grunt.initConfig({
 				detect: {
 					js: true,
 					css: false
-				}
+				},
+				app_root: "절대경로를 사용하는 페이지인 경우."
 			},
 			files: [
 				{
 					src: 'test/target/**/*.html',
-					resource_dest: "test/target/__"
+					resource_dest: "test/target/__",
+					resource_dest_label: "/static/__" // replace로 표현할 경로 라벨
 				}
 			]
 		}

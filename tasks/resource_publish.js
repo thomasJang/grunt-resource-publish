@@ -12,12 +12,14 @@ var path = require('path');
 var chalk = require('chalk');
 var maxmin = require('maxmin');
 
-function times(s, count) { return count < 1 ? '' : new Array(count + 1).join(s); }
-function set_digit(num, length, padder, radix){
-	var s = num.toString(radix || 10);
-	return times( (padder || '0'), (length - s.length) ) + s;
+function times(s, count) {
+	return count < 1 ? '' : new Array(count + 1).join(s);
 }
-function get_time_serial(){
+function set_digit(num, length, padder, radix) {
+	var s = num.toString(radix || 10);
+	return times((padder || '0'), (length - s.length)) + s;
+}
+function get_time_serial() {
 	var now = new Date();
 	return now.getFullYear() + set_digit(now.getMonth(), 2) + set_digit(now.getDate(), 2) + set_digit(now.getHours(), 2) + set_digit(now.getMinutes(), 2) + set_digit(now.getSeconds(), 2);
 }
@@ -61,7 +63,7 @@ module.exports = function (grunt) {
 			// Concat specified files.
 
 			var src = f.src.filter(function (filepath) {
-				if( grunt.file.isDir(filepath) ) return false; // 디렉토리 걸러내기
+				if (grunt.file.isDir(filepath)) return false; // 디렉토리 걸러내기
 				// Warn on and remove invalid source files (if nonull was set).
 				if (!grunt.file.exists(filepath)) {
 					grunt.log.warn('Source file "' + filepath + '" not found.');
@@ -73,13 +75,13 @@ module.exports = function (grunt) {
 
 			//grunt.log.writeln(JSON.stringify(f));
 
-			if(options.detect) {
+			if (options.detect) {
 
 				src.forEach(function (filepath) {
 
 					var content = grunt.file.read(filepath),
-					    re_script = new RegExp('<script[^>]*>.*?</script>', 'g'),
-					    re_css = new RegExp('<link [^<>]*>', 'g');
+						re_script = new RegExp('<script[^>]*>.*?</script>', 'g'),
+						re_css = new RegExp('<link [^<>]*>', 'g');
 
 					script_resource[filepath] = {
 						src: [],
@@ -93,51 +95,58 @@ module.exports = function (grunt) {
 
 					var tmp_resource = [], is_js_published = false, is_css_published = false;
 
-					if(options.detect.js){
-						content.match(re_script).forEach(function(tag){
+					if (options.detect.js) {
+
+						var content_matches = content.match(re_script) || [];
+
+						content_matches.forEach(function (tag) {
 							var matches = tag.match(/src=[\"\']([^\"\']*)[\"\']/), file_src = "";
-							if(matches.length > 1){
+							if (matches && matches.length > 1) {
 								file_src = matches[1];
 
-								if(tag.search('data-min=') == -1) {
-									tmp_resource.push(filepath.substr(0, filepath.lastIndexOf('/')) + '/' + file_src);
-								}else{
+								if (tag.search('data-min=') == -1) {
+									if (tag.search('data-min-disable=') == -1 && file_src.substring(0, 4) != "http" && file_src.substring(0, 2) != "//") {
+										if(options.app_root){
+											if(file_src.substring(0, 1) == "/")
+												tmp_resource.push( options.app_root + file_src);
+											else tmp_resource.push( options.app_root + "/" + file_src);
+										}else {
+											tmp_resource.push( filepath.substr(0, filepath.lastIndexOf('/')) + '/' + file_src );
+										}
+									} else {
+
+									}
+								} else {
 									is_js_published = true;
 								}
 							}
 						});
-						if(!is_js_published){
+						if (!is_js_published) {
 							// 스크립트 리소스 추가
 							script_resource[filepath].src = [].concat(tmp_resource);
 						}
-						else{
+						else {
 							grunt.log.warn(' "' + filepath + '" is published js - js 배포 처리된 html 파일입니다.  ');
 							delete script_resource[filepath];
 						}
 
 						// 목적파일 검사.
-						if(!is_js_published) {
+						if (!is_js_published) {
 							var makeDest = true;
-							for(var k in script_resource){
-								if(k != filepath){ // 현재 파일 제외
+							for (var k in script_resource) {
+								if (k != filepath) { // 현재 파일 제외
 									// 리소스가 동일한 목적파일이 있는지 확인합니다.
-									if( JSON.stringify(script_resource[k].src) == JSON.stringify(script_resource[filepath].src) ){
+									if (JSON.stringify(script_resource[k].src) == JSON.stringify(script_resource[filepath].src)) {
 										script_resource[filepath].dest = script_resource[k].dest;
 										makeDest = false;
 									}
 								}
 							}
-							if(makeDest){
+							if (makeDest) {
 								var resource_name = "res_" + set_digit(resource_idx++, 3) + "." + get_time_serial() + ".js";
 								// resource_name
 								// f.resource_dest
 								var resource_contents = "";
-
-								/*
-								script_resource[filepath].src.forEach( function(fpath){
-									resource_contents += grunt.file.read(fpath) + "\n\n";
-								} );
-								*/
 
 								var result;
 								try {
@@ -166,75 +175,80 @@ module.exports = function (grunt) {
 
 								// Write the destination file.
 								grunt.file.write(f.resource_dest + '/' + resource_name, output);
-
-								//grunt.file.write(f.resource_dest + '/' + resource_name, resource_contents);
-
-								script_resource[filepath].dest = f.resource_dest + '/' + resource_name;
-
+								script_resource[filepath].dest = f.resource_dest_label + '/' + resource_name;
 								grunt.log.writeln(' make file "' + script_resource[filepath].dest + '"  ');
 							}
 						}
 
 						// script_resource[filepath].dest 로 script 태그 치환작업
 
-						if(script_resource[filepath]) {
+						if (script_resource[filepath]) {
 							var first_replace = true;
-							content           = content.replace(re_script, function () {
-								if (first_replace) {
-									first_replace = false;
-									return '<script type="text/javascript" src="' + script_resource[filepath].dest + '" data-min="true"></script>';
-								} else {
-									return '';
+							content = content.replace(re_script, function (tag) {
+								var matches = tag.match(/src=[\"\']([^\"\']*)[\"\']/), file_src = "";
+								if (matches && matches.length > 1) {
+									file_src = matches[1];
+									if (tag.search('data-min=') == -1 && tag.search('data-min-disable=') == -1 && file_src.substring(0, 4) != "http" && file_src.substring(0, 2) != "//") {
+										if (first_replace) {
+											first_replace = false;
+											return '<script type="text/javascript" src="' + script_resource[filepath].dest + '" data-min="true"></script>';
+										} else {
+											return '';
+										}
+									}else{
+										return tag;
+									}
 								}
 							});
 							grunt.file.write(filepath, content);
 							grunt.log.writeln(' replaced "' + filepath + '" for JS  ');
 						}
+
 					}
 
-					if(options.detect.css){
-						content.match(re_css).forEach(function(tag){
+					if (options.detect.css) {
+						content.match(re_css).forEach(function (tag) {
 							var matches = tag.match(/href=[\"\']([^\"\']*)[\"\']/), file_src = "";
-							if(matches.length > 1){
+							if (matches.length > 1) {
 								file_src = matches[1];
 
-								if(tag.search('data-min=') == -1) {
+								if (tag.search('data-min=') == -1) {
 									tmp_resource.push(filepath.substr(0, filepath.lastIndexOf('/')) + '/' + file_src);
-								}else{
+								} else {
 									is_css_published = true;
 								}
 							}
 						});
-						if(!is_css_published){
+						if (!is_css_published) {
 							// 스크립트 리소스 추가
 							css_resource[filepath].src = [].concat(tmp_resource);
 						}
-						else{
+						else {
 							grunt.log.warn(' "' + filepath + '" is published css - css 배포 처리된 html 파일입니다.  ');
 							delete css_resource[filepath];
 						}
 
 						// 목적파일 검사.
-						if(!is_css_published) {
+						if (!is_css_published) {
 							var makeDest = true;
-							for(var k in css_resource){
-								if(k != filepath){ // 현재 파일 제외
+							for (var k in css_resource) {
+								if (k != filepath) { // 현재 파일 제외
 									// 리소스가 동일한 목적파일이 있는지 확인합니다.
-									if( JSON.stringify(css_resource[k].src) == JSON.stringify(css_resource[filepath].src) ){
+									if (JSON.stringify(css_resource[k].src) == JSON.stringify(css_resource[filepath].src)) {
 										css_resource[filepath].dest = css_resource[k].dest;
 										makeDest = false;
 									}
 								}
 							}
-							if(makeDest){
+							if (makeDest) {
 								var resource_name = "res_" + set_digit(resource_idx++, 3) + "." + get_time_serial() + ".css";
 								// resource_name
 								// f.resource_dest
 								var resource_contents = "";
 
-								css_resource[filepath].src.forEach( function(fpath){
+								css_resource[filepath].src.forEach(function (fpath) {
 									resource_contents += grunt.file.read(fpath) + "\n\n";
-								} );
+								});
 
 								grunt.file.write(f.resource_dest + '/' + resource_name, resource_contents);
 								css_resource[filepath].dest = f.resource_dest + '/' + resource_name;
@@ -245,7 +259,7 @@ module.exports = function (grunt) {
 
 						// script_resource[filepath].dest 로 script 태그 치환작업
 
-						if(css_resource[filepath]) {
+						if (css_resource[filepath]) {
 							var first_replace = true;
 							content = content.replace(re_css, function () {
 								if (first_replace) {
