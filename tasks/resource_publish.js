@@ -109,7 +109,7 @@ module.exports = function (grunt) {
 										if(options.app_root){
 											if(file_src.substring(0, 1) == "/")
 												tmp_resource.push( options.app_root + file_src);
-											else tmp_resource.push( options.app_root + "/" + file_src);
+											else tmp_resource.push( filepath.substr(0, filepath.lastIndexOf('/')) + '/' + file_src );
 										}else {
 											tmp_resource.push( filepath.substr(0, filepath.lastIndexOf('/')) + '/' + file_src );
 										}
@@ -143,7 +143,8 @@ module.exports = function (grunt) {
 								}
 							}
 							if (makeDest) {
-								var resource_name = "res_" + set_digit(resource_idx++, 3) + "." + get_time_serial() + ".js";
+								//// var resource_name = "res_" + set_digit(resource_idx++, 3) + "." + get_time_serial() + ".js";
+								var resource_name = "res_" + set_digit(resource_idx++, 3) + ".js";
 								// resource_name
 								// f.resource_dest
 								var resource_contents = "";
@@ -175,7 +176,7 @@ module.exports = function (grunt) {
 
 								// Write the destination file.
 								grunt.file.write(f.resource_dest + '/' + resource_name, output);
-								script_resource[filepath].dest = f.resource_dest_label + '/' + resource_name;
+								script_resource[filepath].dest = f.resource_dest_label + '/' + resource_name + "?dest=" + get_time_serial();
 								grunt.log.writeln(' make file "' + script_resource[filepath].dest + '"  ');
 							}
 						}

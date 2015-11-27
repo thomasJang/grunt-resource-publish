@@ -37,7 +37,8 @@ module.exports = function (grunt) {
 				files: [
 					{
 						src: 'test/target/**/*.html',
-						resource_dest: "test/target/__"
+						resource_dest: "test/target/__",
+						resource_dest_label: "__"
 					}
 				]
 			}
